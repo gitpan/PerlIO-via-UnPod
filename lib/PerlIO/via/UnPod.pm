@@ -3,7 +3,7 @@ package PerlIO::via::UnPod;
 # Set the version info
 # Make sure we do things by the book from now on
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 use strict;
 
 # Satisfy -require-
@@ -25,7 +25,7 @@ sub PUSHED {
 # Die now if strange mode
 # Create the object with the right fields
 
-#    die "Can only read or write with line numbers" unless $_[1] =~ m#^[rw]$#;
+#    die "Can only read or write with removing pod" unless $_[1] =~ m#^[rw]$#;
     bless {insrc => 1},$_[0];
 } #PUSHED
 
@@ -46,7 +46,7 @@ sub FILL {
 
     local( $_ );
     while (defined( $_ = readline( $_[1] ) )) {
-	if (m#^=\w#) {
+	if (m#^=[a-zA-Z]#) {
             $_[0]->{'insrc'} = m#^=cut#;
         } elsif ($_[0]->{'insrc'}) {
             return $_;
@@ -71,7 +71,7 @@ sub WRITE {
 # Return total number of octets handled
 
     foreach (split( m#(?<=$/)#,$_[1] )) {
-	if (m#^=\w#) {
+	if (m#^=[a-zA-Z]#) {
             $_[0]->{'insrc'} = m#^=cut#;
         } elsif ($_[0]->{'insrc'}) {
             return -1 unless print {$_[2]} $_;
