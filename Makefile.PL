@@ -11,9 +11,8 @@ EOD
 
 WriteMakefile (
  NAME		=> "PerlIO::via::UnPod",
- ($[ >= 5.005) ?
- (AUTHOR	=> 'Elizabeth Mattijsen (liz@dijkmat.nl)',
-  ABSTRACT	=> 'PerlIO Layer for removing plain old documentation') : (),
+ AUTHOR		=> 'Elizabeth Mattijsen (liz@dijkmat.nl)',
+ ABSTRACT	=> 'PerlIO Layer for removing plain old documentation',
  VERSION_FROM	=> 'lib/PerlIO/via/UnPod.pm',
  PREREQ_PM	=> {
                    },

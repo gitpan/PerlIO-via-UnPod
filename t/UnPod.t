@@ -9,6 +9,8 @@ BEGIN {				# Magic Perl CORE pragma
     }
 }
 
+use strict;
+use warnings;
 use Test::More tests => 13;
 
 BEGIN { use_ok('PerlIO::via::UnPod') }
@@ -57,7 +59,7 @@ ok( open( my $test,$file ),		'opening without layer' );
 is( readline( $test ),$src,		'check source content' );
 ok( close( $test ),			'close read test handle' );
 
-ok( open( my $test,">$file" ),		'creating without layer' );
+ok( open( $test,">$file" ),		'creating without layer' );
 print $test $original;
 ok( close( $test ),			'close create test handle' );
 }
