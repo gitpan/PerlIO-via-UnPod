@@ -1,20 +1,18 @@
 package PerlIO::via::UnPod;
 
-# Set the version info
-# Make sure we do things by the book from now on
+$VERSION= '0.05';
 
-$VERSION = '0.04';
+# be as strict as possible
 use strict;
 
-# Satisfy -require-
-
+# satisfy -require-
 1;
 
-#-----------------------------------------------------------------------
-
-# Subroutines for standard Perl features
-
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+#
+# Standard Perl features
+#
+#-------------------------------------------------------------------------------
 #  IN: 1 class to bless with
 #      2 mode string (ignored)
 #      3 file handle of PerlIO layer below (ignored)
@@ -22,65 +20,61 @@ use strict;
 
 sub PUSHED { 
 
-# Die now if strange mode
-# Create the object with the right fields
-
-#    die "Can only read or write with removing pod" unless $_[1] =~ m#^[rw]$#;
-    bless {insrc => 1},$_[0];
+    # create object with right attributes
+    return bless { insrc => 1 }, $_[0];
 } #PUSHED
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #  IN: 1 instantiated object
 #      2 handle to read from
 # OUT: 1 processed string (if any)
 
 sub FILL {
 
-# Create local copy of $_
-# While there are lines to be read from the handle
-#  If we're in what looks like a pod line
-#   Set flag depending on whether we are at the end of pod
-#  Elseif we're now in source
-#   Return the line
-# Return indicating end reached
+    # process all lines
+    local($_);
+    while ( defined( $_= readline( $_[1] ) ) ) {
 
-    local( $_ );
-    while (defined( $_ = readline( $_[1] ) )) {
-	if (m#^=[a-zA-Z]#) {
-            $_[0]->{'insrc'} = m#^=cut#;
-        } elsif ($_[0]->{'insrc'}) {
+        # pod, and the end of it
+	if ( m#^=[a-zA-Z]# ) {
+            $_[0]->{insrc}= m#^=cut#;
+        }
+
+        # still in source
+        elsif ( $_[0]->{insrc} ) {
             return $_;
         }
     }
-    undef;
+
+    return undef;
 } #FILL
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #  IN: 1 instantiated object
 #      2 buffer to be written
 #      3 handle to write to
-# OUT: 1 number of bytes written
+# OUT: 1 number of bytes written or -1 to indicate failure
 
 sub WRITE {
 
-# For all of the lines in this bunch (includes delimiter at end)
-#  If it looks like a pod line
-#   Set flag whether we're at the end of pod
-#  Elseif we're in source now
-#   Print the line, return now if failed
-# Return total number of octets handled
+    # all lines
+    foreach ( split( m#(?<=$/)#, $_[1] ) ) {
 
-    foreach (split( m#(?<=$/)#,$_[1] )) {
-	if (m#^=[a-zA-Z]#) {
-            $_[0]->{'insrc'} = m#^=cut#;
-        } elsif ($_[0]->{'insrc'}) {
-            return -1 unless print {$_[2]} $_;
+        # pod, and the end of it
+	if ( m#^=[a-zA-Z]# ) {
+            $_[0]->{insrc}= m#^=cut#;
+        }
+
+        # still in source
+        elsif ( $_[0]->{insrc} ) {
+            return -1 if !print {$_[2]} $_;
         }
     }
-    length( $_[1] );
+
+    return length( $_[1] );
 } #WRITE
 
-#-----------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 __END__
 
@@ -97,6 +91,10 @@ PerlIO::via::UnPod - PerlIO layer for removing plain old documentation
  
  open( my $out,'>:via(UnPod)','file.pm' )
   or die "Can't open file.pm for writing: $!\n";
+
+=head1 VERSION
+
+This documentation describes version 0.05.
 
 =head1 DESCRIPTION
 
@@ -127,8 +125,8 @@ L<PerlIO::via>, L<PerlIO::via::Pod> and any other PerlIO::via modules on CPAN.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002-2003 Elizabeth Mattijsen.  All rights reserved.  This
-library is free software; you can redistribute it and/or modify it under
+Copyright (c) 2002, 2003, 2004, 2012 Elizabeth Mattijsen.  All rights reserved.
+This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.
 
 =cut
